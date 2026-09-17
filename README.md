@@ -76,7 +76,31 @@ npm run dev
 6. Add products, categories, badges, sizes, colors and delivery methods from
    the admin dashboard — no more manual table editing needed
 
-## Project Structure
+## Deploying to Vercel
+
+Two things trip people up every time — both are already fixed in this project,
+but double-check them if the deployed site misbehaves:
+
+1. **Environment variables aren't in your repo.** `.env` is gitignored on
+   purpose (it's meant to stay local), so Vercel never sees your Supabase
+   credentials unless you add them yourself:
+   - Vercel dashboard → your project → **Settings → Environment Variables**
+   - Add `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` with the same values
+     from your local `.env`
+   - Redeploy after adding them (env vars only apply to *new* deployments)
+
+2. **Client-side routing needs a rewrite rule.** Without it, visiting
+   `/admin/login` directly (or refreshing any non-home route) returns a 404
+   from Vercel's static file server, because it doesn't know those paths
+   belong to the React app. This project includes `vercel.json` with the fix:
+   ```json
+   { "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }] }
+   ```
+   Make sure this file is committed/uploaded — Vercel picks it up
+   automatically.
+
+If admin login still doesn't work after both are in place, check the browser
+console on the deployed site the same way we debugged it locally.
 
 ```
 src/

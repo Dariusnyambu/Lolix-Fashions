@@ -189,9 +189,9 @@ export default function AdminProducts() {
     }
   }
 
-  async function handleImageDelete(imageId: string) {
+  async function handleImageDelete(imageId: string, imageUrl: string) {
     try {
-      await deleteProductImage(imageId);
+      await deleteProductImage(imageId, imageUrl);
       if (editing) {
         const refreshed = await fetchAllProductsAdmin();
         setProducts(refreshed);
@@ -403,7 +403,7 @@ export default function AdminProducts() {
                 {editing.images?.map((img) => (
                   <div key={img.id} className="relative h-16 w-16 overflow-hidden rounded-lg">
                     <img src={img.image_url} className="h-full w-full object-cover" />
-                    <button onClick={() => handleImageDelete(img.id)} className="absolute right-0.5 top-0.5 rounded-full bg-royal-950/70 p-0.5 text-white">
+                    <button onClick={() => handleImageDelete(img.id, img.image_url)} className="absolute right-0.5 top-0.5 rounded-full bg-royal-950/70 p-0.5 text-white">
                       <X size={10} />
                     </button>
                   </div>

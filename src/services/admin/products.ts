@@ -2,12 +2,14 @@ import { supabase } from '@/lib/supabase';
 import type { Product } from '@/types';
 import { slugify } from '@/utils/format';
 
+const PRODUCT_IMAGE_BUCKET = 'Lolix store';
+
 const PRODUCT_SELECT = `
   *,
   images:product_images(*),
   variants:product_variants(*, size:sizes(*), color:colors(*)),
   badges:product_badges(badge:badges(*)),
-  category:categories(*)
+  category:categories!products_category_id_fkey(*)
 `;
 
 function normalizeProduct(row: any): Product {
@@ -103,17 +105,30 @@ export async function addProductImage(productId: string, imageUrl: string, displ
   if (error) throw error;
 }
 
-export async function deleteProductImage(imageId: string) {
+export async function deleteProductImage(imageId: string, imageUrl: string) {
+  const publicUrlMarker = `/storage/v1/object/public/${encodeURIComponent(PRODUCT_IMAGE_BUCKET)}/`;
+  const markerIndex = imageUrl.indexOf(publicUrlMarker);
+  const storagePath = markerIndex === -1 ? null : decodeURIComponent(imageUrl.slice(markerIndex + publicUrlMarker.length));
+
+  if (storagePath) {
+    const { error: storageError } = await supabase.storage.from(PRODUCT_IMAGE_BUCKET).remove([storagePath]);
+    if (storageError) throw storageError;
+  }
+
   const { error } = await supabase.from('product_images').delete().eq('id', imageId);
   if (error) throw error;
 }
 
 export async function uploadProductImage(file: File, productId: string): Promise<string> {
-  const ext = file.name.split('.').pop();
+  const ext = file.name.split('.').pop()?.toLowerCase() || 'jpg';
   const path = `${productId}/${Date.now()}.${ext}`;
-  const { error } = await supabase.storage.from('product-images').upload(path, file, { upsert: true });
+  const { error } = await supabase.storage.from(PRODUCT_IMAGE_BUCKET).upload(path, file, {
+    cacheControl: '3600',
+    contentType: file.type,
+    upsert: true,
+  });
   if (error) throw error;
-  const { data } = supabase.storage.from('product-images').getPublicUrl(path);
+  const { data } = supabase.storage.from(PRODUCT_IMAGE_BUCKET).getPublicUrl(path);
   return data.publicUrl;
 }
 

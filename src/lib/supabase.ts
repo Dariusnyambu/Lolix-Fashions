@@ -15,4 +15,13 @@ export const supabase = createClient(supabaseUrl ?? '', supabaseAnonKey ?? '', {
     persistSession: true,
     autoRefreshToken: true,
   },
+  global: {
+    // Some browsers reuse cached cross-origin responses (headers included) for
+    // identical URLs regardless of which origin issued the request, since
+    // Supabase's REST API doesn't send a `Vary: Origin` header. That can replay
+    // a stale Access-Control-Allow-Origin value from an earlier dev session
+    // (e.g. `vite preview` on :4173) and cause spurious CORS failures on :5173.
+    // Forcing `cache: 'no-store'` means every request always hits the network.
+    fetch: (input, init) => fetch(input, { ...init, cache: 'no-store' }),
+  },
 });

@@ -6,7 +6,7 @@ const PRODUCT_SELECT = `
   images:product_images(*),
   variants:product_variants(*, size:sizes(*), color:colors(*)),
   badges:product_badges(badge:badges(*)),
-  category:categories(*)
+  category:categories!products_category_id_fkey(*)
 `;
 
 // Supabase returns joined many-to-many badges nested as { badge: Badge }[]; flatten them.
